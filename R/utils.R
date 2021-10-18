@@ -1,4 +1,4 @@
-# file:   plotting.R
+# file:   utils.R
 # author: Gavin Ha, Ph.D.
 #         Fred Hutchinson Cancer Research Center
 # contact: <gha@fredhutch.org>
