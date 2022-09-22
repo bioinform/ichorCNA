@@ -31,6 +31,11 @@ plotSolutions <- function(hmmResults.cor, tumour_copy, chrs, outDir, counts,
     			   logR.column = logR.column, call.column = call.column, 
     			   plotFileType=plotFileType, plotYLim=plotYLim,
                    plotSegs=plotSegs, estimateScPrevalence=estimateScPrevalence, main=id)
+    outPlotFile <- paste0(outDir, "/", id, "/", id, "_genomeWide_linearRatio")
+    plotGWSolution(hmmResults.cor, s, outPlotFile, seqinfo, 
+    			   logR.column = logR.column, call.column = call.column, 
+    			   plotFileType=plotFileType, plotYLim=plotYLim,
+                   plotSegs=plotSegs, estimateScPrevalence=estimateScPrevalence, main=id, linear.ratio = TRUE)
 
     ### PLOT THE LOG RATIO DATA ALONG WITH COLOUR-CODING FOR PREDICTED CALLS ###
     for (i in chrs){
@@ -140,6 +145,7 @@ plotGWSolution <- function(hmmResults.cor, s, outPlotFile, plotFileType="pdf",
 						   seqinfo = NULL, plotSegs = TRUE, 
                cex = 0.5, cex.axis = 1.5, cex.lab=1.5, cex.text=1.5,
                plotYLim=c(-2,2), estimateScPrevalence, main=NULL, spacing=4,
+               linear.ratio = FALSE,
                turnDevOn=TRUE, turnDevOff=TRUE){
     ## plot genome wide figures for each solution ##
     iter <- hmmResults.cor$results$iter
@@ -173,6 +179,7 @@ plotGWSolution <- function(hmmResults.cor, s, outPlotFile, plotFileType="pdf",
                     param = hmmResults.cor$results$param, chr=NULL,
                     logR.column = logR.column, call.column = call.column,  
                     cex = cex, cex.axis = cex.axis, cex.lab=cex.lab,
+                    linear.ratio = linear.ratio,
                     ploidy = ploidyAll, cytoBand=T, yrange=plotYLim, spacing=spacing, main=NULL)  #ylim for plot
     annotStr <- paste0("Tumor Fraction: ", signif(purityEst, digits=4), ", Ploidy: ", signif(ploidyEst, digits=3))
     if (!is.null(coverage)){
@@ -207,6 +214,7 @@ plotGWSolution <- function(hmmResults.cor, s, outPlotFile, plotFileType="pdf",
 plotCNlogRByChr <- function(dataIn, segs, param = NULL, logR.column = "logR", 
   call.column = "event", plotSegs = TRUE, seqinfo=NULL, chr=NULL, ploidy = NULL, 
   geneAnnot=NULL, yrange=c(-4,6), xlim=NULL, xaxt = "n", cex = 0.5, cex.axis = 1.5, cex.lab=1.5, gene.cex = 0.5, 
+  linear.ratio = FALSE,
   plot.title = NULL, spacing=4, cytoBand=T, alphaVal=1, main){
   #color coding
   alphaVal <- ceiling(alphaVal * 255); class(alphaVal) = "hexmode"
@@ -250,10 +258,17 @@ plotCNlogRByChr <- function(dataIn, segs, param = NULL, logR.column = "logR",
         plot.title <- paste("Chromosome ",i,sep="")
       }
       ## plot logR for bins ##
-      plot(coord,as.numeric(dataByChr[, logR.column]),col=cnCol[dataByChr[, call.column]],
+      if (linear.ratio){
+        plot(coord,as.numeric(dataByChr[, logR.column])^2,col=cnCol[dataByChr[, call.column]],
+           pch=16, ylim=yrange,
+           xlim=xlim, xaxt = xaxt, xlab="",ylab="Copy Number Ratio",
+           cex.lab=cex.lab,cex.axis=cex.axis, cex=cex,las=1)
+      } else {
+        plot(coord,as.numeric(dataByChr[, logR.column]),col=cnCol[dataByChr[, call.column]],
            pch=16, ylim=yrange,
            xlim=xlim, xaxt = xaxt, xlab="",ylab="Copy Number (log2 ratio)",
            cex.lab=cex.lab,cex.axis=cex.axis, cex=cex,las=1)
+      }
       title(plot.title, line = 1.25, xpd=NA, cex.main=1.5)
       ## plot centre line ##
       lines(c(1,as.numeric(dataByChr[dim(dataByChr)[1],3])),rep(0,2),type="l",col="grey",lwd=0.75)
@@ -293,13 +308,23 @@ plotCNlogRByChr <- function(dataIn, segs, param = NULL, logR.column = "logR",
     #midpt <- (as.numeric(dataIn[,"end"]) + as.numeric(dataIn[,"start"]))/2
     #coord <- getGenomeWidePositions(dataIn[,"chr"],midpt)
     coord <- getGenomeWidePositions(dataIn[,"chr"],dataIn[,"end"], seqinfo)
-    plot(coord$posns,as.numeric(dataIn[, logR.column]),
+    if (linear.ratio){
+      plot(coord$posns,as.numeric(dataIn[, logR.column])^2,
+         col=cnCol[as.character(dataIn[,call.column])],pch=16,xaxt="n", ylim=yrange,
+         xlim=c(1,as.numeric(coord$posns[length(coord$posns)])),
+         xlab="",ylab="Copy Number Ratio",
+         cex.lab=cex.lab,cex.axis=cex.axis,cex.main=1.5,cex=cex,las=1,bty="n",
+         #main=dataIn[1,"sample"])
+         main=main)
+    } else {
+      plot(coord$posns,as.numeric(dataIn[, logR.column]),
          col=cnCol[as.character(dataIn[,call.column])],pch=16,xaxt="n", ylim=yrange,
          xlim=c(1,as.numeric(coord$posns[length(coord$posns)])),
          xlab="",ylab="Copy Number (log2 ratio)",
          cex.lab=cex.lab,cex.axis=cex.axis,cex.main=1.5,cex=cex,las=1,bty="n",
          #main=dataIn[1,"sample"])
          main=main)
+     }
     #plot segments
     
     if (plotSegs){      
