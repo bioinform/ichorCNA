@@ -308,13 +308,23 @@ plotCNlogRByChr <- function(dataIn, segs, param = NULL, logR.column = "logR",
     #midpt <- (as.numeric(dataIn[,"end"]) + as.numeric(dataIn[,"start"]))/2
     #coord <- getGenomeWidePositions(dataIn[,"chr"],midpt)
     coord <- getGenomeWidePositions(dataIn[,"chr"],dataIn[,"end"], seqinfo)
-    plot(coord$posns,as.numeric(dataIn[, logR.column]),
+    if (linear.ratio){
+      plot(coord$posns,as.numeric(dataIn[, logR.column])^2,
+         col=cnCol[as.character(dataIn[,call.column])],pch=16,xaxt="n", ylim=yrange,
+         xlim=c(1,as.numeric(coord$posns[length(coord$posns)])),
+         xlab="",ylab="Copy Number Ratio",
+         cex.lab=cex.lab,cex.axis=cex.axis,cex.main=1.5,cex=cex,las=1,bty="n",
+         #main=dataIn[1,"sample"])
+         main=main)
+    } else {
+      plot(coord$posns,as.numeric(dataIn[, logR.column]),
          col=cnCol[as.character(dataIn[,call.column])],pch=16,xaxt="n", ylim=yrange,
          xlim=c(1,as.numeric(coord$posns[length(coord$posns)])),
          xlab="",ylab="Copy Number (log2 ratio)",
          cex.lab=cex.lab,cex.axis=cex.axis,cex.main=1.5,cex=cex,las=1,bty="n",
          #main=dataIn[1,"sample"])
          main=main)
+     }
     #plot segments
     
     if (plotSegs){      
